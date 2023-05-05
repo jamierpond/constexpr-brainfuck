@@ -12,7 +12,7 @@ constexpr static auto generateLoopLookupTable(const std::string_view &sourceCode
         } else if (character == ']') {
             const auto indexOfOpeningBracket = bracketStack.back();
             bracketStack.pop_back();
-            loopLut.push_back({indexOfOpeningBracket, index});
+            loopLut.emplace_back(indexOfOpeningBracket, index);
         }
         index++;
     }
@@ -64,7 +64,7 @@ constexpr static auto interpretBrainfuckCore(const auto &sourceCode, auto &memor
 constexpr static auto interpretBrainfuck(const std::string_view &sourceCode) {
     Memory memory{};
     size_t dataPointer = 0;
-    std::string output = "";
+    std::string output;
     interpretBrainfuckCore(sourceCode, memory, dataPointer, output);
     return output;
 }
