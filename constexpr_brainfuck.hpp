@@ -28,11 +28,16 @@ constexpr static size_t findMatchingBracket(const LoopLut &loopLut, const size_t
     return (found->first == indexOfClosingBracket) ? found->second : found->first;
 }
 
-constexpr static size_t defaultStackSize = 256;
-using Memory = std::array<char, defaultStackSize>;
+constexpr static size_t defaultMemorySize = 256;
+using Memory = std::array<char, defaultMemorySize>;
 using Instruction = void (*)(size_t &, Memory &, std::string &, size_t &, const LoopLut &);
 
 constexpr static std::initializer_list<std::pair<char, Instruction>> instructionList = {
+        {'<', [](auto &dataPointer, auto &, auto &, auto &, auto &) { dataPointer--; }},
+        {'>', [](auto &dataPointer, auto &, auto &, auto &, auto &) { dataPointer++; }},
+        {'+', [](auto &dataPointer, auto &memory, auto &, auto &, auto &) { memory[dataPointer] += 1; }},
+        {'-', [](auto &dataPointer, auto &memory, auto &, auto &, auto &) { memory[dataPointer] -= 1; }},
+        {'.', [](auto &dataPointer, auto &memory, auto &output, auto &, auto &) { output += memory[dataPointer]; }},
         {'[', [](auto &dataPointer, auto &memory, auto &, auto &instructionPointer, auto &loopLookupTable) {
              if (memory[dataPointer] == 0) {
                  instructionPointer = findMatchingBracket(loopLookupTable, instructionPointer);
@@ -41,16 +46,11 @@ constexpr static std::initializer_list<std::pair<char, Instruction>> instruction
         {']', [](auto &dataPointer, auto &memory, auto &, auto &insPtr, auto &loopLut) {
              insPtr = findMatchingBracket(loopLut, insPtr) - 1;
          }},
-        {'<', [](auto &dataPointer, auto &, auto &, auto &, auto &) { dataPointer--; }},
-        {'>', [](auto &dataPointer, auto &, auto &, auto &, auto &) { dataPointer++; }},
-        {'+', [](auto &dataPointer, auto &memory, auto &, auto &, auto &) { memory[dataPointer] += 1; }},
-        {'-', [](auto &dataPointer, auto &memory, auto &, auto &, auto &) { memory[dataPointer] -= 1; }},
-        {'.', [](auto &dataPointer, auto &memory, auto &output, auto &, auto &) { output += memory[dataPointer]; }},
 };
 
 constexpr static auto interpretBrainfuckCore(const auto &sourceCode, auto &memory, auto &dataPointer, auto &output) {
     const auto loopLookupTable = generateLoopLookupTable(sourceCode);
-    for (size_t instructionPointer = 0; instructionPointer < sourceCode.size(); instructionPointer++) {
+    for (size_t instructionPointer = 0; instructionPointer < sourceCode.size(); ++instructionPointer) {
         const auto character = sourceCode[instructionPointer];
         for (auto &ins: instructionList) {
             if (ins.first == character) {
